@@ -1,0 +1,19 @@
+ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 20px 0;
+    justify-content: center;
+}
+
+li a{
+    text-decoration: none;
+    width: 150px;
+    font-size: 20px;
+    padding: 10px;
+    text-align: center;
+}
+
+header {
+    background-color: #131313;
+}
