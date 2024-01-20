@@ -4,7 +4,7 @@ import {
     MenuUnfoldOutlined,
     UploadOutlined,
     UserOutlined,
-    VideoCameraOutlined,
+    PlusOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme } from 'antd';
 import {Link, Outlet} from "react-router-dom";
@@ -35,13 +35,23 @@ const ContainerDefault : React.FC = () => {
                             },
                             {
                                 key: '2',
-                                icon: <VideoCameraOutlined />,
+                                icon: <PlusOutlined />,
                                 label: <Link to={"/create"}>Додати категорію</Link>,
                             },
                             {
                                 key: '3',
                                 icon: <UploadOutlined />,
                                 label: <Link to={"/register"}>Реєстрація</Link>,
+                            },
+                            {
+                                key: '4',
+                                icon: <UploadOutlined />,
+                                label: <Link to={"/products"}>Продукти</Link>,
+                            },
+                            {
+                                key: '5',
+                                icon: <UploadOutlined />,
+                                label: <Link to={"/product/create"}>Додати продукт</Link>,
                             },
                         ]}
                     />
