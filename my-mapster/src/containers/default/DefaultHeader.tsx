@@ -16,7 +16,6 @@ const ButtonStyle = {
 const DefaultHeader = () => {
     const location = useLocation();
 
-
     return (
         <Header style={{display: 'flex', alignItems: 'center'}}>
             <div className="demo-logo"/>
