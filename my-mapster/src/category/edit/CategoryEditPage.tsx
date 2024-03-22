@@ -1,59 +1,59 @@
 import {useNavigate, useParams} from "react-router-dom";
-import {ICategoryEdit, IUploadedFile} from "./types.ts";
-import {Button, Form, Input, Row, Upload} from "antd";
-import {Link} from "react-router-dom";
+import {Button, Form, Input, Row, Upload, UploadFile} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {UploadChangeParam} from "antd/es/upload";
-import { PlusOutlined } from '@ant-design/icons';
+import {PlusOutlined} from "@ant-design/icons";
+import {useEffect, useState} from "react";
 import http_common from "../../http_common.ts";
-import { useEffect, useState } from "react";
-import { ICategory } from "../../ICategory.ts";
-import axios from "axios";
+import {APP_ENV} from "../../env";
+import {ICategoryEdit} from "./types.ts";
+import {ICategoryItem} from "../list/types.ts";
+import {IUploadedFile} from "../create/types.ts";
 
 const CategoryEditPage = () => {
     const navigate = useNavigate();
+    const {id} = useParams();
     const [form] = Form.useForm<ICategoryEdit>();
-    const [category, setCategory] = useState<ICategory>();
-    const itemId = useParams();
+    const [file, setFile] = useState<UploadFile | null>();
 
-    useEffect(() => {
-        console.log(itemId);
-        const fetchData = async () => {
-          try {
-            const response = await axios.get(
-              `http://localhost:8080/api/categories/${itemId.id}`
-            );
-            const data: ICategory = response.data;
-            console.log(data);
-            setCategory(data);
-          } catch (error) {
-            console.error("Помилка при отриманні даних:", error);
-          }
-        };
-    
-        fetchData();
-      }, []);
-
-    const onHandlerSubmit = async (values: ICategoryEdit) => {
+    const onSubmit = async (values: ICategoryEdit) => {
         try {
-            await http_common.put(`http://localhost:8080/api/categories/edit/${itemId.id}`, values, {
+            await http_common.put(`/api/categories/edit/${id}`, values, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
             navigate('/');
-        }
-        catch(ex) {
+        } catch (ex) {
             console.log("Exception create category", ex);
         }
     }
 
+    useEffect(() => {
+        http_common.get<ICategoryItem>(`/api/categories/${id}`)
+            .then(resp => {
+                const {data} = resp;
+                form.setFieldsValue(data);
+                setFile(
+                    {
+                        uid: '-1',
+                        name: data.image,
+                        status: 'done',
+                        url: `${APP_ENV.BASE_URL}/uploading/150_${data.image}`,
+                    });
+            })
+            .catch(error => {
+                console.log("Error server ", error);
+            });
+    }, [id]);
+
+
     return (
         <>
-            <h1>Змінити категорію</h1>
+            <h1>Редагування категорію</h1>
             <Row gutter={16}>
                 <Form form={form}
-                      onFinish={onHandlerSubmit}
+                      onFinish={onSubmit}
                       layout={"vertical"}
                       style={{
                           minWidth: '100%',
@@ -63,40 +63,43 @@ const CategoryEditPage = () => {
                           padding: 20,
                       }}
                 >
+                    <Form.Item
+                        name="id"
+                        hidden
+                    />
 
                     <Form.Item
-                        label={"Назва"}
-                        name={"name"}
-                        htmlFor={"name"}
+                        label="Назва"
+                        name="name"
+                        htmlFor="name"
                         rules={[
-                            {required: true, message: "Це поле є обов'язковим!"},
-                            {min: 3, message: "Довжина поля 3 символи"}
+                            {required: true, message: 'Це поле є обов\'язковим!'},
+                            {min: 3, message: 'Назва повинна містити мінімум 3 символи!'},
                         ]}
                     >
-                        <Input autoComplete="name" placeholder={category?.name} value={category?.name}/>
+                        <Input autoComplete="name"/>
                     </Form.Item>
 
                     <Form.Item
-                        label={"Опис"}
-                        name={"description"}
-                        htmlFor={"description"}
+                        label="Опис"
+                        name="description"
+                        htmlFor="description"
                         rules={[
-                            {required: true, message: "Це поле є обов'язковим!"},
-                            {min: 10, message: "Довжина поля 10 символи"}
+                            {required: true, message: 'Це поле є обов\'язковим!'},
+                            {min: 10, message: 'Опис повинен містити мінімум 10 символів!'},
                         ]}
                     >
-                        <TextArea placeholder={category?.description} value={category?.description}/>
+                        <TextArea/>
                     </Form.Item>
 
                     <Form.Item
-                        name="image"
+                        name="file"
                         label="Фото"
-                        valuePropName="image"
+                        valuePropName="file"
                         getValueFromEvent={(e: UploadChangeParam) => {
                             const image = e?.fileList[0] as IUploadedFile;
                             return image?.originFileObj;
                         }}
-                        rules={[{required: true, message: 'Оберіть фото категорії!'}]}
                     >
                         <Upload
                             showUploadList={{showPreviewIcon: false}}
@@ -104,28 +107,33 @@ const CategoryEditPage = () => {
                             accept="image/*"
                             listType="picture-card"
                             maxCount={1}
+                            fileList={file ? [file] : []}
+                            onChange={(data) => {
+                                setFile(data.fileList[0]);
+                            }}
+
                         >
                             <div>
                                 <PlusOutlined/>
-                                <div style={{marginTop: 8}}>Upload</div>
+                                <div style={{marginTop: 8}}>Обрати нове фото</div>
                             </div>
                         </Upload>
                     </Form.Item>
-
                     <Row style={{display: 'flex', justifyContent: 'center'}}>
                         <Button style={{margin: 10}} type="primary" htmlType="submit">
-                            Змінити
+                            Зберегти
                         </Button>
-                        <Link to={"/"}>
-                            <Button style={{margin: 10}} htmlType="button">
-                                Скасувати
-                            </Button>
-                        </Link>
+                        <Button style={{margin: 10}} htmlType="button" onClick={() => {
+                            navigate('/')
+                        }}>
+                            Скасувати
+                        </Button>
                     </Row>
                 </Form>
             </Row>
+            
         </>
-    );
+    )
 }
 
 export default CategoryEditPage;
